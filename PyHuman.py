@@ -22,11 +22,11 @@ class Robot:
 
         self.shape = pymunk.Poly.create_box(None, (50, 100))
         body_moment = pymunk.moment_for_poly(moment, self.shape.get_vertices())
-        #self.body = pymunk.Body(moment, body_moment)
-        self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        self.body = pymunk.Body(moment, body_moment)
+        #self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
 
-        #self.body.position = (200, 350)
-        self.body.position = (screen_width/2, screen_height - 500)
+        self.body.position = (200, 350)
+        #self.body.position = (screen_width/2, screen_height - 500)
         self.shape.body = self.body
         self.shape.color = (150, 150, 150, 0)
 
@@ -173,15 +173,15 @@ class Robot:
         return body, head, left_arm, right_arm, left_up_leg, left_down_leg, left_foot, right_up_leg, right_down_leg, right_foot
 
     def get_data(self):
-        lu = (360 - math.degrees(self.lu_body.angle)) - (360 - math.degrees(self.body.angle))
-        ld = (360 - math.degrees(self.ld_body.angle)) - (360 - math.degrees(self.lu_body.angle))
-        lf = (360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.ld_body.angle))
-        ru = (360 - math.degrees(self.ru_body.angle)) - (360 - math.degrees(self.body.angle))
-        rd = (360 - math.degrees(self.rd_body.angle)) - (360 - math.degrees(self.ru_body.angle))
-        rf = (360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.rd_body.angle))
-        arm_l = (360 - math.degrees(self.left_arm_upper_body.angle)) - (360 - math.degrees(self.body.angle))
-        arm_r = (360 - math.degrees(self.right_arm_upper_body.angle)) - (360 - math.degrees(self.body.angle))
-        return int(self.head_body.position.y), math.degrees(self.body.angle), lu, ld, lf, ru, rd, rf, arm_l, arm_r
+        lu = ((360 - math.degrees(self.lu_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        ld = ((360 - math.degrees(self.ld_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        lf = ((360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        ru = ((360 - math.degrees(self.ru_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        rd = ((360 - math.degrees(self.rd_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        rf = ((360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        la = ((360 - math.degrees(self.left_arm_upper_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        ra = ((360 - math.degrees(self.right_arm_upper_body.angle)) - (360 - math.degrees(self.body.angle))) / 360.0
+        return self.body.angle, lu, ld, lf, la, ru, rd, rf, ra
 
     def draw_face(self, screen):
         if self.distance > 400:
@@ -243,20 +243,20 @@ class Robot:
 
         #lf
         self.lf_flag = False
-        if (360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.ld_body.angle)) >= 45 and self.lf_motor.rate > 0:
+        if (360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.ld_body.angle)) >= 90 and self.lf_motor.rate > 0:
             self.lf_motor.rate = 0
             self.lf_flag = True
-        elif (360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.ld_body.angle)) <= -90 and self.lf_motor.rate < 0:
+        elif (360 - math.degrees(self.lf_body.angle)) - (360 - math.degrees(self.ld_body.angle)) <= -45 and self.lf_motor.rate < 0:
             self.lf_motor.rate = 0
             self.lf_flag = True
 
 
         #rf
         self.rf_flag = False
-        if (360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.rd_body.angle)) >= 45 and self.rf_motor.rate > 0:
+        if (360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.rd_body.angle)) >= 90 and self.rf_motor.rate > 0:
             self.rf_motor.rate = 0
             self.rf_flag = True
-        elif (360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.rd_body.angle)) <= -90 and self.rf_motor.rate < 0:
+        elif (360 - math.degrees(self.rf_body.angle)) - (360 - math.degrees(self.rd_body.angle)) <= -45 and self.rf_motor.rate < 0:
             self.rf_motor.rate = 0
             self.rf_flag = True
 
@@ -452,7 +452,7 @@ def run_test():
                 elif event.key == pygame.K_h:
                     robot.rf_motor.rate = -5
 
-        print(math.degrees(abs(robot.left_arm_upper_body.angle)) % 360)
+        #print(math.degrees(abs(robot.left_arm_upper_body.angle)) % 360)
 
         robot.update()
         space.step(1/50.0)
@@ -471,7 +471,7 @@ def run_test():
         robot.ra_motor.rate = 0
         robot.lf_motor.rate = 0
         robot.rf_motor.rate = 0
-        
+
 
 def run_human(genomes, config):
     pygame.init()
@@ -513,9 +513,9 @@ def run_human(genomes, config):
             break
 
         for i, robot in enumerate(robots):
-            #ge[i].fitness += 0.1
             output = nets[i].activate(robot.get_data())
             speed = 5
+            #print(output)
             for i, out in enumerate(output):
                 if out > 0.9:
                     if i == 0 and robot.lu_flag == False:
@@ -555,31 +555,31 @@ def run_human(genomes, config):
         min = 9999
         at = 0
         for i, robot in enumerate(robots):
-            robot.update()
             robot.set_color((240, 240, 240), (240, 240, 240), (240, 240, 240))
             distance = int(check_distance(robot.body.position, human.body.position))
+            #if robot.body.position.y >= 250:
+                #ge[i].fitness += 1
 
             if distance < robot.distance:
                 ge[i].fitness += 1
                 robot.tick = 0
             elif distance > robot.distance:
                 robot.tick += 1
-
             robot.distance = distance
             if distance < min:
                 min = distance
                 at = i
+            robot.update()
 
         robots[at].set_color((255, 0, 0))
         robot_position = robots[at].body.position
-
 
         if robots[at].body.position.x > screen_width / 2:
             d = int(robots[at].body.position.x - screen_width / 2)
             human.set_position(d)
             for robot in robots:
                 robot.set_position(d)
-            ruler -= 5
+            ruler -= 3
 
 
         space.step(1/50.0)
@@ -629,20 +629,19 @@ def run_human(genomes, config):
             robot.lu_motor.rate = 0
             robot.ru_motor.rate = 0
             robot.ld_motor.rate = 0
-            robot.rd_motor.rate =  0
-            robot.la_motor.rate =  0
+            robot.rd_motor.rate = 0
+            robot.la_motor.rate = 0
             robot.ra_motor.rate = 0
-            robot.lf_motor.rate =  0
+            robot.lf_motor.rate = 0
             robot.rf_motor.rate = 0
 
             if robot.is_catch:
-                ge[i].fitness += 5000
+                ge[i].fitness += 1000
                 human.catch += 1
                 space.remove(robot.get_shapes())
                 robots.remove(robot)
                 ge.pop(i)
             elif robot.is_done:
-                ge[i].fitness -= 1
                 space.remove(robot.get_shapes())
                 robots.remove(robot)
                 ge.pop(i)
@@ -664,7 +663,7 @@ def run(config_path):
     winner = p.run(run_human, 1000)
 
 
-run_test()
+#run_test()
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
