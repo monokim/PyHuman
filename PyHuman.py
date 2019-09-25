@@ -371,12 +371,6 @@ class Human:
         self.wheel1_body._set_position((self.wheel1_body.position.x - x, int(self.wheel1_body.position.y)))
         self.wheel2_body._set_position((self.wheel2_body.position.x - x, int(self.wheel2_body.position.y)))
 
-class Camera:
-    def __init__(self, pos):
-        self.position = pos
-
-
-
 def add_land(space):
     body = pymunk.Body(body_type=pymunk.Body.STATIC)
     body.position = (0, 100)
@@ -586,8 +580,6 @@ def run_human(genomes, config):
         screen.fill((255, 255, 255))
         space.debug_draw(draw_options)
 
-        #for robot in robots:
-            #robot.draw_face(screen)
         robots[at].draw_face(screen)
         human.draw_human(screen, min)
 
